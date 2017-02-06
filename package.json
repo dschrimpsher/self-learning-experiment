@@ -1,0 +1,25 @@
+{
+  "name": "self-learning-experiment",
+  "version": "1.0.0",
+  "description": "A reading program that stores knowledge in JSON-LD",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dschrimpsher/self-learning-experiment.git"
+  },
+  "keywords": [
+    "knowledge",
+    "learning",
+    "node.js",
+    "json-ld"
+  ],
+  "author": "Dan Schrimpsher, PhD",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dschrimpsher/self-learning-experiment/issues"
+  },
+  "homepage": "https://github.com/dschrimpsher/self-learning-experiment#readme"
+}
