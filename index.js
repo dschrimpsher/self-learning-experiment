@@ -1,40 +1,122 @@
+/**
+ * Basic First grade reading algorithm.
+ *
+ * @author Dan Schrimpsher <https://github.com/dschrimpsher>
+ */
+
+
 var jsonld = require('jsonld');
 
+var book1 = "Spot is a dog.Jimmy is a boy.Joan is a girl.Spot has a ball.Jimmy has a pen.Dog is a animal.Boy is a person.Girl is a person.";
+var knowledge = [];
+var count = 0;
 
-var doc = {
-  "http://schema.org/name": "Manu Sporny",
-  "http://schema.org/url": {"@id": "http://manu.sporny.org/"},
-  "http://schema.org/image": {"@id": "http://manu.sporny.org/images/manu.png"}
-};
-var context = {
-  "name": "http://schema.org/name",
-  "homepage": {"@id": "http://schema.org/url", "@type": "@id"},
-  "image": {"@id": "http://schema.org/image", "@type": "@id"}
-};
-
-// compact a document according to a particular context
-// see: http://json-ld.org/spec/latest/json-ld/#compacted-document-form
-jsonld.compact(doc, context, function(err, compacted) {
-  console.log(JSON.stringify(compacted, null, 2));
-  /* Output:
-  {
-    "@context": {...},
-    "name": "Manu Sporny",
-    "homepage": "http://manu.sporny.org/",
-    "image": "http://manu.sporny.org/images/manu.png"
-  }
-  */
-});
+var sentences = book1.split('.');
+console.log(sentences);
+sentences.forEach(process);
 
 
-var htmlparser = require("htmlparser");
-var rawHtml = "Xyz <script language= javascript>var foo = '<<bar>>';< /  script><!--<!-- Waah! -- -->";
-var handler = new htmlparser.DefaultHandler(function (error, dom) {
-    if (error)
-        console.log(JSON.stringify(error));
-    else
-        console.log('Done parsing');
-});
-var parser = new htmlparser.Parser(handler);
-parser.parseComplete(rawHtml);
-console.log(JSON.stringify(handler.dom));
+function process(sentence, index, array) {
+    count++;
+    if (!sentence) {
+
+    } else {
+        var words = sentence.split(' ');
+        if (words[1] == 'is') {
+            var type = "new:" + capitalizeFirstLetter(words[3]);
+            var newNoun = false;
+            var noun = getExistingNoun(capitalizeFirstLetter(words[0]));
+            if (!noun) {
+                newNoun = true;
+                var noun = {
+                    "@context": {
+                        new: "http://example.org/",
+                        xd: "http://schema.org/"
+                    },
+                    "@type": type,
+                    "@id": words[0],
+                    "xd:name": words[0]
+                };
+            } else {
+                noun["@type"] = type;
+            }
+
+            var directObject = {
+                "@context": {
+                    new: "http://example.org/",
+                    xd: "http://schema.org/"
+                },
+                "@type": "xd:Thing",
+                "@id": capitalizeFirstLetter(words[3]),
+                "xd:name": capitalizeFirstLetter(words[3])
+            }
+
+            if (newNoun) {
+                knowledge.push(noun);
+            }
+            knowledge.push(directObject);
+        } else {
+            var relationship = "new:" + capitalizeFirstLetter(words[1]);
+            var newNoun = false;
+            var noun = getExistingNoun(capitalizeFirstLetter(words[0]));
+            if (!noun) {
+                newNoun = true;
+                var noun = {
+                    "@context": {
+                        new: "http://example.org/",
+                        xd: "http://schema.org/"
+                    },
+                    "@type": "xd:Thing",
+                    "@id": words[0],
+                    "xd:name": words[0]
+                };
+            }
+
+            noun[relationship] = "xd:" + capitalizeFirstLetter(words[3]);
+
+            var directObject = {
+                "@context": {
+                    new: "http://example.org/",
+                    xd: "http://schema.org/"
+                },
+                "@type": "xd:Thing",
+                "@id": capitalizeFirstLetter(words[3]),
+                "xd:name": capitalizeFirstLetter(words[3])
+            }
+
+            if (newNoun) {
+                knowledge.push(noun);
+            }
+            knowledge.push(directObject);
+        }
+    }
+    if (count == array.length) {
+        done();
+    }
+}
+
+function done() {
+    // knowledge.forEach(function(compacted) {
+    //     jsonld.expand(compacted, function(err, expanded) {
+    //         console.log(JSON.stringify(expanded, null, 2));
+    //     })
+    // })
+    jsonld.expand(knowledge, function(err, expanded) {
+            console.log(JSON.stringify(knowledge, null, 2));
+    })
+}
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function getExistingNoun(noun) {
+    for (var i = 0; i < knowledge.length; i++) {
+        console.log(knowledge[i]["@id"]);
+        if (knowledge[i]["@id"] == noun) {
+            return knowledge[i];
+        } else {
+            console.log(knowledge[i]["@id"] + ' vs ' + noun);
+        }
+    }
+}
